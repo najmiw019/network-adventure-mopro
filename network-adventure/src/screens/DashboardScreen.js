@@ -1,31 +1,74 @@
-import React from 'react';
-import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, shadow } from '../theme/colors';
-import { user, recommendation } from '../data/user';
-import { levels, levelDesc, getLevelStatus } from '../data/levels';
 
-export default function DashboardScreen({ navigation }) {
+export default function DashboardScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const xpLevel = Math.floor((user?.total_xp || 0) / 100) + 1;
-  
-  const current = (levels || []).find(l => getLevelStatus(l, user?.completedLevels || []) === 'open') || (levels ? levels[levels.length - 1] : null);
+  const currentUserId = route?.params?.userId;
+
+  const [loading, setLoading] = useState(true);
+  const [userData, setUserData] = useState(null);
+  const [currentLevel, setCurrentLevel] = useState(null);
+  const [recommendation, setRecommendation] = useState(null);
+
+  const API_URL = 'http://localhost:3000/api';
+
+  useEffect(() => {
+    if (!currentUserId) {
+      setLoading(false);
+      return;
+    }
+    fetchDashboardData();
+  }, [currentUserId]);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`${API_URL}/dashboard/${currentUserId}`);
+      const json = await response.json();
+      
+      if (json.success) {
+        setUserData(json.user);
+        setCurrentLevel(json.current_level);
+        setRecommendation(json.recommendation);
+      }
+    } catch (error) {
+      console.error("Gagal mengambil data dashboard:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View style={[s.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={colors.teal} />
+        <Text style={[s.small, { marginTop: 10 }]}>Memuat data akun...</Text>
+      </View>
+    );
+  }
+
+  if (!currentUserId) {
+    return (
+      <View style={[s.container, { justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <Text style={s.small}>Data akun tidak ditemukan. Silakan login kembali.</Text>
+      </View>
+    );
+  }
+
+  const xpLevel = Math.floor((userData?.total_xp || 0) / 100) + 1;
+  const currentProgress = currentLevel?.progress || 0;
 
   return (
     <ScrollView 
       style={s.container} 
-      // Padding bottom dikecilkan ke 35 agar jarak ke navbar bawah pas dan tidak ada sisa kosong berlebih
-      contentContainerStyle={{ 
-        padding: 20, 
-        paddingTop: Math.max(insets.top + 16, 36), 
-        paddingBottom: 35 
-      }}
+      contentContainerStyle={{ padding: 20, paddingTop: Math.max(insets.top + 16, 36), paddingBottom: 35 }}
       showsVerticalScrollIndicator={false}
     >
-      <Text style={s.hello}>Halo, {user?.name || 'Explorer'}!</Text>
+      <Text style={s.hello}>Halo, {userData?.name || 'Explorer'}!</Text>
 
-      {/* Kartu hijau: ajakan lanjut misi */}
       <TouchableOpacity activeOpacity={0.9} style={s.hero} onPress={() => navigation.navigate('Map')}>
         <View style={s.badge}>
           <Ionicons name="flash" size={14} color={colors.yellow} />
@@ -38,26 +81,33 @@ export default function DashboardScreen({ navigation }) {
 
       {/* Progres belajar */}
       <Text style={s.section}>Progres Belajar</Text>
-      {current ? (
+      {currentLevel ? (
         <View style={[s.pink, { flexDirection: 'row' }]}>
           <View style={s.thumb}>
             <Ionicons name="git-network-outline" size={44} color={colors.teal} />
           </View>
           <View style={{ flex: 1, marginLeft: 14 }}>
-            <Text style={s.lessonTitle} numberOfLines={2}>Level {current.level_order}: {current.name}</Text>
-            <Text style={s.small} numberOfLines={2}>{levelDesc[current.level_id] || 'Materi pembelajaran jaringan komputer.'}</Text>
+            <Text style={s.lessonTitle} numberOfLines={2}>Level {currentLevel.level_order}: {currentLevel.name}</Text>
+            
+            {/* Menampilkan deskripsi yang ditarik langsung dari database MySQL */}
+            <Text style={s.small} numberOfLines={2}>
+              {currentLevel.description || 'Materi pembelajaran jaringan komputer.'}
+            </Text>
+
             <View style={s.barRow}>
               <View style={s.barBg}>
-                <View style={[s.barFill, { width: `${user?.currentProgress || 0}%` }]} />
+                <View style={[s.barFill, { width: `${currentProgress}%` }]} />
               </View>
-              <Text style={s.pct}>{user?.currentProgress || 0}%</Text>
+              <Text style={s.pct}>{currentProgress}%</Text>
             </View>
             <TouchableOpacity 
               style={s.btn} 
-              onPress={() => navigation.navigate('MissionBriefing', { levelId: current.level_id })}
+              onPress={() => navigation.navigate('MissionBriefing', { levelId: currentLevel.level_id })}
               activeOpacity={0.8}
             >
-              <Text style={s.btnText}>Lanjutkan belajar</Text>
+              <Text style={s.btnText}>
+                {currentProgress === 0 ? 'Mulai Belajar' : 'Lanjutkan belajar'}
+              </Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -73,14 +123,14 @@ export default function DashboardScreen({ navigation }) {
         <View style={[s.pink, s.stat]}>
           <Ionicons name="flame" size={34} color="#E5473B" />
           <View style={{ marginLeft: 8, flexShrink: 1 }}>
-            <Text style={s.statValue}>{user?.streak_count || 0} hari</Text>
+            <Text style={s.statValue}>{userData?.streak_count || 0} hari</Text>
             <Text style={s.statLabel}>Streak</Text>
           </View>
         </View>
         <View style={[s.pink, s.stat]}>
           <Ionicons name="flash" size={34} color="#F2C230" />
           <View style={{ marginLeft: 8, flexShrink: 1 }}>
-            <Text style={s.statValue}>{user?.total_xp || 0} XP</Text>
+            <Text style={s.statValue}>{userData?.total_xp || 0} XP</Text>
             <Text style={s.statLabel}>Total XP</Text>
           </View>
         </View>

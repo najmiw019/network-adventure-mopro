@@ -3,22 +3,22 @@ const express = require('express');
 const cors = require('cors');
 const db = require('./config/db');
 
-// Import Semua Routes
 const userRoutes = require('./routes/userRoutes');
 const authRoutes = require('./routes/authRoutes');
 const lessonRoutes = require('./routes/lessonRoutes');
 const activityRoutes = require('./routes/activityRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
+app.use('/api/dashboard', dashboardRoutes);
 
 app.get('/', (req, res) => {
   res.send('Welcome to Network Adventure API Server!');
 });
 
-// Tes Koneksi Database
 app.get('/api/test-db', async (req, res) => {
   try {
     const [rows] = await db.query('SELECT NOW() AS waktu_sekarang');
@@ -34,7 +34,6 @@ app.get('/api/test-db', async (req, res) => {
   }
 });
 
-// Gunakan Prefix Route yang Sesuai
 app.use('/api/users', userRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/lessons', lessonRoutes);

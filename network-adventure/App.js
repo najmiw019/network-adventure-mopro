@@ -24,10 +24,16 @@ import ResultScreen from './src/screens/ResultScreen';
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
-function Tabs() {
+function Tabs({ route }) {
+  const userIdFromAuth = route?.params?.userId;
+
   return (
     <Tab.Navigator tabBar={props => <TabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Dashboard" component={DashboardScreen} />
+      <Tab.Screen 
+        name="Dashboard" 
+        component={DashboardScreen} 
+        initialParams={{ userId: userIdFromAuth }} 
+      />
       <Tab.Screen name="Map" component={MapScreen} />
       <Tab.Screen name="Lab" component={LabScreen} />
       <Tab.Screen name="Profil" component={ProfileScreen} />

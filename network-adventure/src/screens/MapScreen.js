@@ -15,10 +15,10 @@ export default function MapScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const W = Math.min(width, 440);
-  const n = levels.length; // Otomatis mengikuti 5 level dari data/levels.js
+  const n = levels.length;
   const done = user.completedLevels.length;
   const pct = Math.round((done / n) * 100);
-  const H = TOP + (n - 1) * ROW + 200; // Disesuaikan agar pas di level terakhir
+  const H = TOP + (n - 1) * ROW + 200;
 
   const pos = levels.map((_, i) => ({ x: i % 2 === 0 ? W * 0.74 : W * 0.26, y: TOP + i * ROW }));
   let d = `M ${pos[0].x} ${pos[0].y}`;
@@ -37,7 +37,6 @@ export default function MapScreen({ navigation }) {
 
   return (
     <View style={s.container}>
-      {/* Header Banner Progress */}
       <View style={[s.banner, { marginTop: Math.max(insets.top + 12, 32) }]}>
         <View style={s.bannerRow}>
           <Text style={s.bannerTitle}>Progres kamu</Text>
@@ -47,34 +46,29 @@ export default function MapScreen({ navigation }) {
         <Text style={s.bannerSub}>{done} dari {n} level selesai</Text>
       </View>
 
-      {/* Peta Level */}
       <ScrollView 
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 60 }}
         showsVerticalScrollIndicator={false}
       >
         <View style={{ width: W, height: H }}>
-          {/* Elemen Dekorasi Background */}
           <View style={[s.deco, { top: 160, left: W * 0.5 - 10, width: 110, height: 110 }]} />
           <View style={[s.deco, { top: 380, left: -20, width: 90, height: 90 }]} />
           <View style={[s.deco, { top: 520, left: W * 0.6, width: 80, height: 80 }]} />
 
-          {/* Garis Kurva Path Svg */}
           <Svg width={W} height={H} style={StyleSheet.absoluteFill}>
             <Path d={d} stroke={colors.path} strokeWidth={22} strokeLinecap="round" fill="none" />
           </Svg>
 
-          {/* Maskot Awal (Level 1) */}
           <Image 
             source={require('../../assets/mascot/ungu-terjun.png')}
             style={{ position: 'absolute', left: 16, top: pos[0].y - 80, width: 90, height: 90 }} 
             resizeMode="contain" 
           />
 
-          {/* Node Level 1 s.d. Level 5 */}
           {levels.map((level, i) => {
             const status = getLevelStatus(level, user.completedLevels);
             const { x, y } = pos[i];
-            const right = i % 2 === 0; // node di kanan -> label di kiri
+            const right = i % 2 === 0;
             return (
               <View key={level.level_id} style={{ opacity: status === 'locked' ? 0.6 : 1 }}>
                 <TouchableOpacity 
@@ -103,7 +97,6 @@ export default function MapScreen({ navigation }) {
             );
           })}
 
-          {/* Maskot Finish (Level Terakhir) */}
           <Image 
             source={require('../../assets/mascot/kuning-finish.png')}
             style={{ position: 'absolute', right: 20, top: pos[n - 1].y + 35, width: 100, height: 100 }} 

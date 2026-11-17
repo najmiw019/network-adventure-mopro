@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { View, Text, Image, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { colors, fonts } from '../theme/colors';
 
-// Form dipakai bersama oleh Login dan Sign Up.
 function AuthForm({ title, image, fields, linkText, linkLabel, onLink, onSubmit }) {
   const [values, setValues] = useState({});
   return (
@@ -35,19 +34,17 @@ function AuthForm({ title, image, fields, linkText, linkLabel, onLink, onSubmit 
 
 export function LoginScreen({ navigation }) {
   const handleLogin = async (values) => {
-    // Validasi kosong di frontend
     if (!values.email || !values.password) {
       Alert.alert("Perhatian", "Email dan password wajib diisi!");
       return;
     }
 
     try {
-      // Kirim request ke backend Express kamu (sesuaikan IP/port jika pakai HP fisik/emulator)
       const response = await fetch('http://localhost:3000/api/users/sync', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          auth_uid: values.email, // Sementara menggunakan email sebagai unik ID jika belum pakai Firebase
+          auth_uid: values.email,
           email: values.email,
           name: values.email.split('@')[0]
         })
@@ -56,7 +53,12 @@ export function LoginScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        navigation.replace('Main');
+        const userId = data.data?.user_id || data.user_id || data.id;
+        if (!userId) {
+          Alert.alert("Gagal Login", "ID akun tidak ditemukan. Silakan coba lagi.");
+          return;
+        }
+        navigation.replace('Main', { userId });
       } else {
         Alert.alert("Gagal Login", data.message || "Terjadi kesalahan");
       }
@@ -100,7 +102,12 @@ export function SignUpScreen({ navigation }) {
       const data = await response.json();
 
       if (response.ok) {
-        navigation.replace('Main');
+        const userId = data.data?.user_id || data.user_id || data.id;
+        if (!userId) {
+          Alert.alert("Gagal Daftar", "ID akun tidak ditemukan. Silakan coba lagi.");
+          return;
+        }
+        navigation.replace('Main', { userId });
       } else {
         Alert.alert("Gagal Daftar", data.message || "Terjadi kesalahan");
       }
@@ -124,7 +131,6 @@ export function SignUpScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  // Style tetap sama seperti punyamu
   container: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center', padding: 32 },
   title: { fontFamily: fonts.bold, fontSize: 24, textAlign: 'center', color: colors.ink, lineHeight: 30 },
   mascot: { width: 170, height: 130, marginVertical: 16 },
