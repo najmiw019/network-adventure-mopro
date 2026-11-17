@@ -16,6 +16,30 @@ export default function ResultScreen({ route, navigation }) {
   const [progressSaved, setProgressSaved] = useState(false);
   const [progressError, setProgressError] = useState(null);
   const [reward, setReward] = useState(null);
+  const [userName, setUserName] = useState('');
+
+  useEffect(() => {
+    if (!userId) return undefined;
+
+    let active = true;
+    const fetchUserName = async () => {
+      try {
+        const response = await fetch(`${API_URL}/users/${userId}`);
+        const json = await response.json();
+        if (!response.ok || !json.success || !json.data?.name) {
+          throw new Error(json.message || 'Gagal mengambil nama akun.');
+        }
+        if (active) setUserName(json.data.name);
+      } catch (error) {
+        console.error('Gagal mengambil nama akun:', error);
+      }
+    };
+
+    fetchUserName();
+    return () => {
+      active = false;
+    };
+  }, [userId]);
 
   const saveProgress = useCallback(async () => {
     if (!userId) {
@@ -77,7 +101,7 @@ export default function ResultScreen({ route, navigation }) {
           resizeMode="contain"
         />
         <Text style={s.congratsSub}>You are great!</Text>
-        <Text style={s.congratsTitle}>Good Job, Virgiani!</Text>
+        <Text style={s.congratsTitle}>Good Job, {userName || 'Explorer'}!</Text>
         <Text style={s.scoreDesc}>
           Langkahmu makin jauh. Sedikit ulasan akan membuatmu makin mantap.
         </Text>
