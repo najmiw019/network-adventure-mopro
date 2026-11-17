@@ -5,8 +5,8 @@ export const user = {
   email: 'adventure@mail.com',
   total_xp: 120,
   streak_count: 3,
-  completedLevels: [1],   // level_id yang sudah selesai
-  currentProgress: 49,    // % progres materi level yang sedang dikerjakan
+  completedLevels: [1],
+  currentProgress: 49,    
 };
 
 // Mock tabel recommendations
