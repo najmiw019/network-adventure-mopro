@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useState } from 'react';
 import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { colors, fonts, shadow } from '../theme/colors';
 import { API_URL } from '../config';
 
@@ -14,32 +15,33 @@ export default function DashboardScreen({ navigation, route }) {
   const [currentLevel, setCurrentLevel] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
 
-
-  useEffect(() => {
+  const fetchDashboardData = useCallback(async () => {
     if (!currentUserId) {
       setLoading(false);
       return;
     }
-    fetchDashboardData();
-  }, [currentUserId]);
-
-  const fetchDashboardData = async () => {
     try {
       setLoading(true);
       const response = await fetch(`${API_URL}/dashboard/${currentUserId}`);
       const json = await response.json();
-      
-      if (json.success) {
-        setUserData(json.user);
-        setCurrentLevel(json.current_level);
-        setRecommendation(json.recommendation);
+      if (!response.ok || !json.success) {
+        throw new Error(json.message || 'Gagal mengambil data dashboard.');
       }
+      setUserData(json.user);
+      setCurrentLevel(json.current_level);
+      setRecommendation(json.recommendation);
     } catch (error) {
       console.error("Gagal mengambil data dashboard:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [currentUserId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDashboardData();
+    }, [fetchDashboardData])
+  );
 
   if (loading) {
     return (
@@ -102,7 +104,10 @@ export default function DashboardScreen({ navigation, route }) {
             </View>
             <TouchableOpacity 
               style={s.btn} 
-              onPress={() => navigation.navigate('MissionBriefing', { levelId: currentLevel.level_id })}
+              onPress={() => navigation.navigate('MissionBriefing', {
+                levelId: currentLevel.level_id,
+                userId: currentUserId,
+              })}
               activeOpacity={0.8}
             >
               <Text style={s.btnText}>

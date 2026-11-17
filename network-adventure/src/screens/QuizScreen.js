@@ -10,6 +10,7 @@ import { quizzes } from '../data/quizzes';
 export default function QuizScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const levelId = route?.params?.levelId || 1;
+  const userId = route?.params?.userId;
   const level = levels.find(l => l.level_id === levelId) || levels[0];
 
   const questions = (quizzes[levelId] || []).slice(0, 3);
@@ -53,7 +54,8 @@ export default function QuizScreen({ route, navigation }) {
       navigation.replace('ResultScreen', { 
         score: score, 
         total: questions.length, 
-        levelId: level.level_id 
+        levelId: level.level_id,
+        userId,
       });
     }
   };

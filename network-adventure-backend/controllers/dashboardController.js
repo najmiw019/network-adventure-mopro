@@ -5,7 +5,7 @@ exports.getDashboardData = async (req, res) => {
 
   try {
     const [userRows] = await db.query(
-      'SELECT name, streak_count, total_xp FROM users WHERE user_id = ?', 
+      'SELECT name, streak_count, total_xp, unlocked_level FROM users WHERE user_id = ?',
       [userId]
     );
     
@@ -14,52 +14,57 @@ exports.getDashboardData = async (req, res) => {
     }
     const user = userRows[0];
 
-    const [existingProgress] = await db.query(
-      'SELECT * FROM user_progress WHERE user_id = ?', 
-      [userId]
-    );
-
-    if (existingProgress.length === 0) {
-      await db.query(
-        'INSERT INTO user_progress (user_id, lesson_id, completion_status) VALUES (?, 1, 0)',
-        [userId]
-      ).catch(err => console.log("Info/Skip insert progress:", err.message));
-    }
-
     const [levelRows] = await db.query(`
-      SELECT 
-        l.level_id, 
-        l.level_order, 
-        l.name, 
-        l.description,
-        COALESCE(up.completion_status, 0) as status_selesai,
-        CASE WHEN up.completion_status = 1 THEN 100 ELSE 0 END AS progress
-      FROM learning_levels l
-      LEFT JOIN user_progress up ON l.level_id = up.lesson_id AND up.user_id = ?
-      ORDER BY l.level_order ASC
+      SELECT
+        ll.level_id,
+        ll.level_order,
+        ll.name,
+        COUNT(DISTINCT l.lesson_id) AS total_lessons,
+        COUNT(DISTINCT CASE
+          WHEN UPPER(up.completion_status) = 'COMPLETED' THEN l.lesson_id
+        END) AS completed_lessons
+      FROM learning_levels ll
+      LEFT JOIN lessons l ON l.level_id = ll.level_id
+      LEFT JOIN user_progress up
+        ON up.lesson_id = l.lesson_id AND up.user_id = ?
+      GROUP BY ll.level_id, ll.level_order, ll.name
+      ORDER BY ll.level_order ASC
     `, [userId]);
 
-    let currentLevel = levelRows.find(l => l.progress < 100);
+    const levels = levelRows.map(level => {
+      const totalLessons = Number(level.total_lessons) || 0;
+      const completedLessons = Number(level.completed_lessons) || 0;
+      const progress = level.level_order < (Number(user.unlocked_level) || 1)
+        ? 100
+        : totalLessons
+          ? Math.round((completedLessons / totalLessons) * 100)
+          : 0;
+      return {
+        ...level,
+        progress
+      };
+    });
+    const currentLevel = levels.find(level => level.progress < 100) || null;
 
-    if (!currentLevel && levelRows.length > 0) {
-      currentLevel = levelRows[levelRows.length - 1];
-    }
-
-    const [recRows] = await db.query(
-      'SELECT reason FROM recommendations WHERE user_id = ? ORDER BY recommendation_id DESC LIMIT 1', 
-      [userId]
-    );
-
-    let recommendation = null;
-    if (recRows.length > 0) {
+    let recommendation;
+    if (currentLevel) {
+      const levelName = currentLevel.name.replace(/^Level\s+\d+:\s*/i, '');
+      const isContinuation = currentLevel.progress > 0;
       recommendation = {
-        title: "Rekomendasi untukmu",
-        reason: recRows[0].reason
+        title: `${isContinuation ? 'Lanjutkan' : 'Mulai'} Level ${currentLevel.level_order}`,
+        reason: currentLevel.level_order === 1
+          ? `Netto menyarankanmu mempelajari ${levelName} terlebih dahulu.`
+          : `Level sebelumnya selesai! Sekarang pelajari ${levelName}.`
+      };
+    } else if (levels.length > 0) {
+      recommendation = {
+        title: 'Semua level selesai!',
+        reason: 'Hebat! Kamu sudah menyelesaikan seluruh petualangan jaringan.'
       };
     } else {
       recommendation = {
-        title: "Mulai Petualangan Jaringanmu!",
-        reason: "Netto menyarankanmu untuk mempelajari dasar-dasar jaringan komputer di Level 1 terlebih dahulu."
+        title: 'Materi belum tersedia',
+        reason: 'Belum ada level pembelajaran di server.'
       };
     }
 

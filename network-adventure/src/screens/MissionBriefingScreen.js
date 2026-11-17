@@ -10,6 +10,7 @@ export default function MissionBriefingScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   
   const levelId = route?.params?.levelId || 1;
+  const userId = route?.params?.userId;
   const level = levels.find(l => l.level_id === levelId) || levels[0];
 
   return (
@@ -47,7 +48,7 @@ export default function MissionBriefingScreen({ route, navigation }) {
         {/* Tombol Aksi */}
         <TouchableOpacity 
           style={s.btn} 
-          onPress={() => navigation.navigate('MicroLesson', { levelId: level.level_id })}
+          onPress={() => navigation.navigate('MicroLesson', { levelId: level.level_id, userId })}
           activeOpacity={0.85}
         >
           <Text style={s.btnText}>Start Learning</Text>

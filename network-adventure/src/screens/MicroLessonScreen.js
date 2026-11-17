@@ -10,6 +10,7 @@ import { lessons } from '../data/lessons';
 export default function MicroLessonScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const level = levels.find(l => l.level_id === route.params.levelId);
+  const userId = route?.params?.userId;
   const pages = lessons[level.level_id];
   const [i, setI] = useState(0);
   const page = pages[i];
@@ -18,7 +19,7 @@ export default function MicroLessonScreen({ route, navigation }) {
   const next = () => {
     if (!last) return setI(i + 1);
     
-    navigation.navigate('Flashcard', { levelId: level.level_id });
+    navigation.navigate('Flashcard', { levelId: level.level_id, userId });
   };
 
   return (

@@ -34,9 +34,17 @@ function Tabs({ route }) {
         component={DashboardScreen} 
         initialParams={{ userId: userIdFromAuth }} 
       />
-      <Tab.Screen name="Map" component={MapScreen} />
+      <Tab.Screen
+        name="Map"
+        component={MapScreen}
+        initialParams={{ userId: userIdFromAuth }}
+      />
       <Tab.Screen name="Lab" component={LabScreen} />
-      <Tab.Screen name="Profil" component={ProfileScreen} />
+      <Tab.Screen
+        name="Profil"
+        component={ProfileScreen}
+        initialParams={{ userId: userIdFromAuth }}
+      />
     </Tab.Navigator>
   );
 }

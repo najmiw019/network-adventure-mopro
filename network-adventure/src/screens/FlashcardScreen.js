@@ -10,6 +10,7 @@ import { flashcards } from '../data/flashcards';
 export default function FlashcardScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const levelId = route?.params?.levelId || 1;
+  const userId = route?.params?.userId;
   const level = levels.find(l => l.level_id === levelId) || levels[0];
   
   const cards = flashcards[levelId] || [
@@ -56,7 +57,7 @@ export default function FlashcardScreen({ route, navigation }) {
     if (!lastCard) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      navigation.navigate('Quiz', { levelId: level.level_id });
+      navigation.navigate('Quiz', { levelId: level.level_id, userId });
     }
   };
 
