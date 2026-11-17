@@ -1,7 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Sesuaikan IP laptop kamu (hasil dari command 'ipconfig' di CMD)
-const BASE_URL = 'http://10.190.92.197:5000/api'; 
+import { API_URL } from './config';
+
+// Alamat backend diatur di src/config.js (bisa di-override lewat .env.local)
+const BASE_URL = API_URL;
 
 // 1. REGISTER / SIGN UP API
 export const signUpAPI = async (name, email, password) => {

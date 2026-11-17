@@ -3,6 +3,7 @@ import { View, Text, ScrollView, Image, StyleSheet, TouchableOpacity, ActivityIn
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors, fonts, shadow } from '../theme/colors';
+import { API_URL } from '../config';
 
 export default function DashboardScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
@@ -13,7 +14,6 @@ export default function DashboardScreen({ navigation, route }) {
   const [currentLevel, setCurrentLevel] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
 
-  const API_URL = 'http://localhost:3000/api';
 
   useEffect(() => {
     if (!currentUserId) {

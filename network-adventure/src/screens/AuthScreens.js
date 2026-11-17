@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, Image, TextInput, StyleSheet, TouchableOpacity, KeyboardAvoidingView, Platform, Alert } from 'react-native';
 import { colors, fonts } from '../theme/colors';
+import { API_URL } from '../config';
 
 function AuthForm({ title, image, fields, linkText, linkLabel, onLink, onSubmit }) {
   const [values, setValues] = useState({});
@@ -40,7 +41,7 @@ export function LoginScreen({ navigation }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/users/sync', {
+      const response = await fetch(`${API_URL}/users/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -89,7 +90,7 @@ export function SignUpScreen({ navigation }) {
     }
 
     try {
-      const response = await fetch('http://localhost:3000/api/users/sync', {
+      const response = await fetch(`${API_URL}/users/sync`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
